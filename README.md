@@ -6,9 +6,9 @@ Once a podcast is added, it will automatically find the artwork and title to the
 Accesing the podcast will display the list of available tracks within it.
 
 CHANGELOG: 
-07/03/16    Forked code from @snoshoesledska
-            Added @coryo DumbTools to allow adding podcasts from clients that don't support InputDirectoryObject
-            Update icons to new styling
-            Changed 'Add' action to 'Find' action
+07/03/16    Forked code from @snoshoesledska, 
+            Added @coryo DumbTools to allow adding podcasts from clients that don't support InputDirectoryObject, 
+            Update icons to new styling, 
+            Changed 'Add' action to 'Find' action, 
             Moved the 'Delete' action in to the Podcast feed listing
             
