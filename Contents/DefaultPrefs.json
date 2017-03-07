@@ -4,6 +4,5 @@
 		"label":"Sort Decending",
 		"type":"bool",
 		"default":"true"
-	},
+	}
 ]
-

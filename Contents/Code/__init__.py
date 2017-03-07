@@ -1,13 +1,11 @@
-from HTMLParser import HTMLParser
-import urllib2
-import json
+from DumbTools import DumbKeyboard
 
 ART = 'art-default.jpg'
-ICON = 'icon-default.png'
-PLUS = 'plus.png'
-MINUS = 'minus.png'
-HUGEM = 'hugem.png'
-Dict['feed']
+ICON = 'pp_icon.png'
+PLUS = 'pp_find.png'
+MINUS = 'pp_remove.png'
+NEXT = 'pp_next.png'
+BACK = 'pp_back.png'
 
 ####################################################################################################
 def Start():
@@ -16,54 +14,82 @@ def Start():
 	ObjectContainer.title1 = 'PlexPod'
 	TrackObject.thumb = R(ICON)
 
+	# Initialize Dict if it does not exist yet
+	if not Dict['feed']:
+		Dict['feed'] = []
+
 ####################################################################################################     
 @handler('/music/PlexPod', 'PlexPod', thumb=ICON, art=ART)
 def MainMenu(nameofshow=None, urlofshow=None, artofshow=None):
+
 	oc = ObjectContainer()
-	if (nameofshow!=None) and (urlofshow!=None) and (artofshow!=None):
-		ugly=[nameofshow, urlofshow, artofshow]
+
+	if (nameofshow != None) and (urlofshow != None) and (artofshow != None):
+
+		ugly = [nameofshow, urlofshow, artofshow]
+
 		if ugly not in Dict['feed']:
 			Dict['feed'].append(ugly)
+
 		Dict['feed'].sort(key=lambda x: x[0])
-		oc = ObjectContainer()
 		Dict.Save()
 
 	for x in Dict['feed']:
+
 		try:
-			oc.add(DirectoryObject(key=Callback(SecondMenu, title=x[1], offset=0), title=x[0], thumb = x[2]))
+			oc.add(DirectoryObject(key=Callback(SecondMenu, title=x[0], feedurl=x[1], offset=0), title=x[0], thumb = x[2]))
 		except:
 			pass
-	oc.add(InputDirectoryObject(key=Callback(Search), title="Add a Podcast", thumb = R(PLUS)))
-	oc.add(DirectoryObject(key=Callback(DelMenu, title=None), title="Delete a Podcast", thumb = R(MINUS)))
+
+	if Client.Product in DumbKeyboard.clients:
+		DumbKeyboard('/music/PlexPod/find', oc, Search,
+			dktitle = 'Find Podcast',
+			dkthumb = R(PLUS))
+	else:
+	    oc.add(InputDirectoryObject(key=Callback(Search), title="Find Podcast", thumb = R(PLUS)))
+
+#	oc.add(DirectoryObject(key=Callback(DelMenu, title="Delete a Podcast"), title="Delete a Podcast", thumb = R(MINUS)))
+
 	return oc
 
-def DelMenu(title):
+####################################################################################################
+def DelMenu(feedObj):
+
 	oc = ObjectContainer()
+
 	try:	
-		Dict['feed'].remove(title)
+		Dict['feed'].remove(feedObj)
 		Dict.Save()
 	except:
 		pass
-	for x in Dict['feed']:
-		try:
-			oc.add(DirectoryObject(key=Callback(DelMenu, title=x), title=x[0], thumb = x[2]))
-		except:
-			pass
-	oc.add(DirectoryObject(key=Callback(MainMenu), title="Main Menu", thumb = R(HUGEM)))
+
+#	for x in Dict['feed']:
+
+#		try:
+#			oc.add(DirectoryObject(key=Callback(DelMenu, title=x), title=x[0], thumb = x[2]))
+#		except:
+#			pass
+
+	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 	return oc
 
+####################################################################################################
+def SecondMenu(title, feedurl, offset):
 
-def SecondMenu(title, offset):
 	oc = ObjectContainer()
-	feed = RSS.FeedFromURL(title)
+	feed = RSS.FeedFromURL(feedurl)
+
 	if Prefs["Sortord"]:
 		mal = 1
 	else:
 		mal = -1
+
 	for item in feed.entries[::mal][offset:offset+26]:
+
 		url = item.enclosures[0]['url']
 		showtitle = item.title
-		summary = strip_tags(item.summary)
+		summary = String.StripTags(item.summary)
+
 		try:
 			image = str(feed.channel.image.url)
 			oc.add(CreateTrackObject(url=url, title=showtitle, thumb=image, summary=summary))
@@ -71,9 +97,17 @@ def SecondMenu(title, offset):
 			oc.title1=feed.channel.title
 		except:
 			pass
-	oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, offset=offset+26), title="Next Page", thumb = image))
+
+	oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, feedurl=feedurl, offset=offset+26), title="Next Page", thumb = R(NEXT)))
+
+	for x in Dict['feed']:
+		try:
+			if x[1] == feedurl:
+				oc.add(DirectoryObject(key=Callback(DelMenu, feedObj=x), title="Remove Podcast", thumb = R(MINUS)))
+		except:
+			pass
+
 	return oc
-	
 
 ####################################################################################################
 def CreateTrackObject(url, title, thumb, summary, include_container=False):
@@ -108,26 +142,16 @@ def CreateTrackObject(url, title, thumb, summary, include_container=False):
 	else:
 		return track_object
 
-
-
-class MLStripper(HTMLParser):
-    def __init__(self):
-        self.reset()
-        self.fed = []
-    def handle_data(self, d):
-        self.fed.append(d)
-    def get_data(self):
-        return ''.join(self.fed)
-
-def strip_tags(html):
-    s = MLStripper()
-    s.feed(html)
-    return s.get_data()
-
+####################################################################################################
+@route('/music/PlexPod/find', 'Find Podcast', thumb=ICON, art=ART)
 def Search(query):
+
 	oc = ObjectContainer()
+	oc.title1 = 'Select podcast to add'
 	neary = str(query.replace (" ", "+"))
-	pod = json.load(urllib2.urlopen("https://itunes.apple.com/search?term=%s&entity=podcast&limit=25" % neary))['results']
+	pod = JSON.ObjectFromURL("https://itunes.apple.com/search?term=%s&entity=podcast&limit=25" % neary)['results']
+
 	for x in pod:
 		oc.add(DirectoryObject(key=Callback(MainMenu, urlofshow=[x][0]['feedUrl'], nameofshow=[x][0]['collectionName'], artofshow=[x][0]['artworkUrl600']), title=[x][0]['collectionName'], thumb=[x][0]['artworkUrl600']))
+
 	return oc
