@@ -53,7 +53,7 @@ def PodcastMenu():
 	for x in Dict['podcastlist']:
 
 		try:
-			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[1], feedurl=x[0], offset=0, showAdd="False"), title=x[1], summary=x[2], thumb = x[3]))
+			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[0], feedurl=x[1], offset=0, showAdd="False"), title=x[0], summary=x[2], thumb = x[3]))
 		except:
 			pass
 
@@ -126,7 +126,7 @@ def AddPodcast( podcastURL=None, podcastName=None, podcastSummary=None, podcastI
 
 	if (podcastURL != None) and (podcastName != None) and (podcastSummary != None) and (podcastIcon != None):
 
-		ugly = [podcastURL, podcastName, podcastSummary, podcastIcon]
+		ugly = [podcastName, podcastURL, podcastSummary, podcastIcon]
 
 		if ugly not in Dict['podcastlist']:
 			Dict['podcastlist'].append(ugly)
