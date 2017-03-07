@@ -4,7 +4,7 @@ ART = 'plexcasts_art.jpg'
 ICON = 'plexcasts_icon.png'
 PLUS = 'plexcasts_find.png'
 MINUS = 'plexcasts_remove.png'
-NEXT = 'plexcast_next.png'
+NEXT = 'plexcasts_next.png'
 BACK = 'plexcasts_back.png'
 
 ####################################################################################################
@@ -48,8 +48,6 @@ def MainMenu(nameofshow=None, urlofshow=None, artofshow=None):
 	else:
 	    oc.add(InputDirectoryObject(key=Callback(Search), title="Find Podcast", thumb = R(PLUS)))
 
-#	oc.add(DirectoryObject(key=Callback(DelMenu, title="Delete a Podcast"), title="Delete a Podcast", thumb = R(MINUS)))
-
 	return oc
 
 ####################################################################################################
@@ -63,13 +61,6 @@ def DelMenu(feedObj):
 	except:
 		pass
 
-#	for x in Dict['feed']:
-
-#		try:
-#			oc.add(DirectoryObject(key=Callback(DelMenu, title=x), title=x[0], thumb = x[2]))
-#		except:
-#			pass
-
 	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 	return oc
 
@@ -80,12 +71,13 @@ def SecondMenu(title, feedurl, offset):
 	try:
 		feed = RSS.FeedFromURL(feedurl)
 
+		displayCount = int(Prefs["DisplayCount"])
 		if Prefs["Sortord"]:
 			mal = 1
 		else:
 			mal = -1
 
-		for item in feed.entries[::mal][offset:offset+26]:
+		for item in feed.entries[::mal][offset:offset+displayCount]:
 
 			url = item.enclosures[0]['url']
 			showtitle = item.title
@@ -99,7 +91,9 @@ def SecondMenu(title, feedurl, offset):
 			except:
 				pass
 
-		oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, feedurl=feedurl, offset=offset+26), title="Next", thumb = R(NEXT)))
+		if (len(feed.entries)-offset) > displayCount:
+			oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, feedurl=feedurl, offset=offset+displayCount), title="Next", thumb = R(NEXT)))
+
 	except Exception, e:
 		Log ( 'Exception while reading feed')
 		Log ( e)
@@ -157,7 +151,7 @@ def Search(query):
 	oc = ObjectContainer()
 	oc.title1 = 'Select podcast to add'
 	neary = str(query.replace (" ", "+"))
-	pod = JSON.ObjectFromURL("https://itunes.apple.com/search?term=%s&entity=podcast&limit=25" % neary)['results']
+	pod = JSON.ObjectFromURL("https://itunes.apple.com/search?term=%s&entity=podcast&limit=26" % neary)['results']
 
 	for x in pod:
 		oc.add(DirectoryObject(key=Callback(MainMenu, urlofshow=[x][0]['feedUrl'], nameofshow=[x][0]['collectionName'], artofshow=[x][0]['artworkUrl600']), title=[x][0]['collectionName'], thumb=[x][0]['artworkUrl600']))

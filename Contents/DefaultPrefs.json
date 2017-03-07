@@ -1,5 +1,11 @@
 [
 	{
+		"id":"DisplayCount",
+		"label":"Episode display count",
+		"type":"text",
+		"default":"26"
+	},
+	{
 		"id":"Sortord",
 		"label":"Sort Decending",
 		"type":"bool",
