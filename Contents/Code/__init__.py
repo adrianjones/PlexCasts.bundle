@@ -11,7 +11,7 @@ BACK = 'pp_back.png'
 def Start():
 
 	ObjectContainer.art = R(ART)
-	ObjectContainer.title1 = 'PlexPod'
+	ObjectContainer.title1 = 'PlexCasts'
 	TrackObject.thumb = R(ICON)
 
 	# Initialize Dict if it does not exist yet
@@ -19,7 +19,7 @@ def Start():
 		Dict['feed'] = []
 
 ####################################################################################################     
-@handler('/music/PlexPod', 'PlexPod', thumb=ICON, art=ART)
+@handler('/music/plexcasts', 'PlexCasts', thumb=ICON, art=ART)
 def MainMenu(nameofshow=None, urlofshow=None, artofshow=None):
 
 	oc = ObjectContainer()
@@ -42,7 +42,7 @@ def MainMenu(nameofshow=None, urlofshow=None, artofshow=None):
 			pass
 
 	if Client.Product in DumbKeyboard.clients:
-		DumbKeyboard('/music/PlexPod/find', oc, Search,
+		DumbKeyboard('/music/plexcasts/find', oc, Search,
 			dktitle = 'Find Podcast',
 			dkthumb = R(PLUS))
 	else:
@@ -143,7 +143,7 @@ def CreateTrackObject(url, title, thumb, summary, include_container=False):
 		return track_object
 
 ####################################################################################################
-@route('/music/PlexPod/find', 'Find Podcast', thumb=ICON, art=ART)
+@route('/music/plexcasts/find', 'Find Podcast', thumb=ICON, art=ART)
 def Search(query):
 
 	oc = ObjectContainer()
