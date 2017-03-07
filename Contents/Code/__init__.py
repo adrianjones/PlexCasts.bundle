@@ -77,28 +77,36 @@ def DelMenu(feedObj):
 def SecondMenu(title, feedurl, offset):
 
 	oc = ObjectContainer()
-	feed = RSS.FeedFromURL(feedurl)
+	try:
+		feed = RSS.FeedFromURL(feedurl)
 
-	if Prefs["Sortord"]:
-		mal = 1
-	else:
-		mal = -1
+		if Prefs["Sortord"]:
+			mal = 1
+		else:
+			mal = -1
 
-	for item in feed.entries[::mal][offset:offset+26]:
+		for item in feed.entries[::mal][offset:offset+26]:
 
-		url = item.enclosures[0]['url']
-		showtitle = item.title
-		summary = String.StripTags(item.summary)
+			url = item.enclosures[0]['url']
+			showtitle = item.title
+			summary = String.StripTags(item.summary)
 
-		try:
-			image = str(feed.channel.image.url)
-			oc.add(CreateTrackObject(url=url, title=showtitle, thumb=image, summary=summary))
-			oc.art=image
-			oc.title1=feed.channel.title
-		except:
-			pass
+			try:
+				image = str(feed.channel.image.url)
+				oc.add(CreateTrackObject(url=url, title=showtitle, thumb=image, summary=summary))
+				oc.art=image
+				oc.title1=feed.channel.title
+			except:
+				pass
 
-	oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, feedurl=feedurl, offset=offset+26), title="Next Page", thumb = R(NEXT)))
+		oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, feedurl=feedurl, offset=offset+26), title="Next", thumb = R(NEXT)))
+	except Exception, e:
+		Log ( 'Exception while reading feed')
+		Log ( e)
+		oc = ObjectContainer(header='Problem with prodcast', message='There was a problem viewing this Podcast, please try again or remove it.')
+		oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
+		pass
+
 
 	for x in Dict['feed']:
 		try:
