@@ -110,7 +110,7 @@ def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 
 	for x in Dict['podcastlist']:
 		try:
-			if x[0] == feedurl:
+			if x[1] == feedurl:
 				oc.add(DirectoryObject(key=Callback(DelPodcast, feedObj=x), title="Remove Podcast", summary="Removes this Podcast from your list", thumb = R(MINUS)))
 		except:
 			pass
