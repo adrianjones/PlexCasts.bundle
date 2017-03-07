@@ -1,11 +1,11 @@
 from DumbTools import DumbKeyboard
 
-ART = 'art-default.jpg'
-ICON = 'pp_icon.png'
-PLUS = 'pp_find.png'
-MINUS = 'pp_remove.png'
-NEXT = 'pp_next.png'
-BACK = 'pp_back.png'
+ART = 'plexcasts_art.jpg'
+ICON = 'plexcasts_icon.png'
+PLUS = 'plexcasts_find.png'
+MINUS = 'plexcasts_remove.png'
+NEXT = 'plexcast_next.png'
+BACK = 'plexcasts_back.png'
 
 ####################################################################################################
 def Start():
