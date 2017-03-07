@@ -2,76 +2,81 @@ from DumbTools import DumbKeyboard
 
 ART = 'plexcasts_art.jpg'
 ICON = 'plexcasts_icon.png'
-PLUS = 'plexcasts_find.png'
+ADD = 'plexcasts_add.png'
+FIND = 'plexcasts_find.png'
 MINUS = 'plexcasts_remove.png'
 NEXT = 'plexcasts_next.png'
 BACK = 'plexcasts_back.png'
 
 ####################################################################################################
 def Start():
+	Plugin.AddViewGroup("Podcasts", viewMode="InfoList")
+	Plugin.AddViewGroup("PodcastEpisode", viewMode="InfoList")
 
+	ObjectContainer.view_group = 'Podcasts'
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = 'PlexCasts'
 	TrackObject.thumb = R(ICON)
 
 	# Initialize Dict if it does not exist yet
-	if not Dict['feed']:
-		Dict['feed'] = []
+	if not Dict['podcastlist']:
+		Dict['podcastlist'] = []
+
+#	Dict['podcastlist'] = []
+#	Dict.save()
 
 ####################################################################################################     
 @handler('/music/plexcasts', 'PlexCasts', thumb=ICON, art=ART)
-def MainMenu(nameofshow=None, urlofshow=None, artofshow=None):
+def MainMenu():
+	
+	oc = ObjectContainer(view_group="Podcasts")
 
-	oc = ObjectContainer()
-
-	if (nameofshow != None) and (urlofshow != None) and (artofshow != None):
-
-		ugly = [nameofshow, urlofshow, artofshow]
-
-		if ugly not in Dict['feed']:
-			Dict['feed'].append(ugly)
-
-		Dict['feed'].sort(key=lambda x: x[0])
-		Dict.Save()
-
-	for x in Dict['feed']:
-
-		try:
-			oc.add(DirectoryObject(key=Callback(SecondMenu, title=x[0], feedurl=x[1], offset=0), title=x[0], thumb = x[2]))
-		except:
-			pass
+	oc.add(DirectoryObject(key=Callback(PodcastMenu), title="My Podcasts", thumb = R(ICON)))
 
 	if Client.Product in DumbKeyboard.clients:
 		DumbKeyboard('/music/plexcasts/find', oc, Search,
 			dktitle = 'Find Podcast',
-			dkthumb = R(PLUS))
+			dkthumb = R(FIND))
 	else:
-	    oc.add(InputDirectoryObject(key=Callback(Search), title="Find Podcast", thumb = R(PLUS)))
+	    oc.add(InputDirectoryObject(key=Callback(Search), title="Find Podcast", thumb = R(FIND)))
+
+	return oc
+
+####################################################################################################     
+@route('/music/plexcasts/podcasts')
+def PodcastMenu():
+
+	oc = ObjectContainer(view_group="Podcasts")
+	oc.title1 = 'My Podcasts'
+
+
+	for x in Dict['podcastlist']:
+
+		try:
+			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[1], feedurl=x[0], offset=0, showAdd="False"), title=x[1], summary=x[2], thumb = x[3]))
+		except:
+			pass
 
 	return oc
 
 ####################################################################################################
-def DelMenu(feedObj):
+@route('/music/plexcasts/podcast')
+def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 
-	oc = ObjectContainer()
-
-	try:	
-		Dict['feed'].remove(feedObj)
-		Dict.Save()
-	except:
-		pass
-
-	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
-	return oc
-
-####################################################################################################
-def SecondMenu(title, feedurl, offset):
-
-	oc = ObjectContainer()
+	oc = ObjectContainer(view_group="PodcastEpisode")
 	try:
 		feed = RSS.FeedFromURL(feedurl)
 
+		if showAdd == "True":
+			oc.title1 = 'Listen or add podcast'
+			oc.add(DirectoryObject(key=Callback(AddPodcast, podcastURL=feedurl, podcastName=feed.channel.title, podcastSummary=feed.channel.description, podcastIcon=feed.channel.image.url), title="Add Podcast", thumb = R(ADD)))
+		else:
+			oc.title1 = title
+
+
 		displayCount = int(Prefs["DisplayCount"])
+		offset = int(offset)
+
 		if Prefs["Sortord"]:
 			mal = 1
 		else:
@@ -82,7 +87,9 @@ def SecondMenu(title, feedurl, offset):
 			url = item.enclosures[0]['url']
 			showtitle = item.title
 			summary = String.StripTags(item.summary)
-
+			if len( summary) == 0:
+				summary = "- No episode details -"
+			
 			try:
 				image = str(feed.channel.image.url)
 				oc.add(CreateTrackObject(url=url, title=showtitle, thumb=image, summary=summary))
@@ -92,7 +99,7 @@ def SecondMenu(title, feedurl, offset):
 				pass
 
 		if (len(feed.entries)-offset) > displayCount:
-			oc.add(DirectoryObject(key=Callback(SecondMenu, title=title, feedurl=feedurl, offset=offset+displayCount), title="Next", thumb = R(NEXT)))
+			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=title, feedurl=feedurl, offset=offset+displayCount), title="Next", thumb = R(NEXT)))
 
 	except Exception, e:
 		Log ( 'Exception while reading feed')
@@ -101,14 +108,49 @@ def SecondMenu(title, feedurl, offset):
 		oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 		pass
 
-
-	for x in Dict['feed']:
+	for x in Dict['podcastlist']:
 		try:
-			if x[1] == feedurl:
-				oc.add(DirectoryObject(key=Callback(DelMenu, feedObj=x), title="Remove Podcast", thumb = R(MINUS)))
+			if x[0] == feedurl:
+				oc.add(DirectoryObject(key=Callback(DelPodcast, feedObj=x), title="Remove Podcast", summary="Removes this Podcast from your list", thumb = R(MINUS)))
 		except:
 			pass
 
+	return oc
+
+####################################################################################################     
+@route('/music/plexcasts/add')
+def AddPodcast( podcastURL=None, podcastName=None, podcastSummary=None, podcastIcon=None):
+
+	oc = ObjectContainer(no_cache=True)
+	oc.title1 = 'Podcast added'
+
+	if (podcastURL != None) and (podcastName != None) and (podcastSummary != None) and (podcastIcon != None):
+
+		ugly = [podcastURL, podcastName, podcastSummary, podcastIcon]
+
+		if ugly not in Dict['podcastlist']:
+			Dict['podcastlist'].append(ugly)
+
+		Dict['podcastlist'].sort(key=lambda x: x[0])
+		Dict.Save()
+
+	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
+
+	return oc
+
+####################################################################################################
+@route('/music/plexcasts/delete')
+def DelPodcast(feedObj):
+
+	oc = ObjectContainer(no_cache=True)
+
+	try:	
+		Dict['podcastlist'].remove(feedObj)
+		Dict.Save()
+	except:
+		pass
+
+	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 	return oc
 
 ####################################################################################################
@@ -148,12 +190,12 @@ def CreateTrackObject(url, title, thumb, summary, include_container=False):
 @route('/music/plexcasts/find', 'Find Podcast', thumb=ICON, art=ART)
 def Search(query):
 
-	oc = ObjectContainer()
+	oc = ObjectContainer(no_cache=True)
 	oc.title1 = 'Select podcast to add'
 	neary = str(query.replace (" ", "+"))
 	pod = JSON.ObjectFromURL("https://itunes.apple.com/search?term=%s&entity=podcast&limit=26" % neary)['results']
 
 	for x in pod:
-		oc.add(DirectoryObject(key=Callback(MainMenu, urlofshow=[x][0]['feedUrl'], nameofshow=[x][0]['collectionName'], artofshow=[x][0]['artworkUrl600']), title=[x][0]['collectionName'], thumb=[x][0]['artworkUrl600']))
+		oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=[x][0]['collectionName'], feedurl=[x][0]['feedUrl'], offset=0, showAdd="True"), title=[x][0]['collectionName'], thumb=[x][0]['artworkUrl600']))
 
 	return oc
