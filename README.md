@@ -10,6 +10,6 @@ CHANGELOG:
             Added @coryo DumbTools to allow adding podcasts from clients that don't support InputDirectoryObject, 
             Update icons to new styling, 
             Changed 'Add' action to 'Find' action, 
-            Moved the 'Delete' action in to the Podcast feed listings
+            Moved the 'Delete' action in to the Podcast feed listings, 
             Rename to PlexCasts
             
