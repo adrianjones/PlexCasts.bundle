@@ -24,14 +24,12 @@ def Start():
 
 		if Dict['feed']:
 			for x in Dict['feed']:
-				ugly = [x[0], x[1], x[2], ""]
+				ugly = [x[0], x[1], x[2], "- Readd Podcast for summary -"]
 				Dict['feed-v2'].append(ugly)
 
 			Dict['feed-v2'].sort(key=lambda x: x[0])
 			Dict.Save()
 
-			Dict['feed'] = []
-			Dict.save()
 
 ####################################################################################################     
 @handler('/music/plexcasts', 'PlexCasts', thumb=ICON, art=ART)
@@ -59,9 +57,11 @@ def PodcastMenu():
 
 
 	for x in Dict['feed-v2']:
-
 		try:
-			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[0], feedurl=x[1], offset=0, showAdd="False"), title=x[0], summary=x[3], thumb=x[2]))
+			summary=x[3]
+			if len( summary) == 0:
+				summary = "- No summary found -"
+			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[0], feedurl=x[1], offset=0, showAdd="False"), title=x[0], summary=summary, thumb=x[2]))
 		except:
 			pass
 
@@ -79,7 +79,7 @@ def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 			oc.title1 = 'Listen or add podcast'
 			oc.replace_parent=False
 			oc.no_cache=False
-			oc.add(DirectoryObject(key=Callback(AddPodcast, podcastURL=feedurl, podcastName=title, podcastSummary=feed.channel.description, podcastIcon=feed.channel.image.url), title="Add Podcast", thumb = R(ADD)))
+			oc.add(DirectoryObject(key=Callback(AddPodcast, podcastURL=feedurl, podcastName=title, podcastSummary=feed.channel.description, podcastIcon=feed.channel.image.url), title="Add Podcast", summary="Click here to add to My Podcasts", thumb=R(ADD)))
 		else:
 			oc.title1 = title
 
@@ -121,7 +121,7 @@ def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 	for x in Dict['feed-v2']:
 		try:
 			if x[1] == feedurl:
-				oc.add(DirectoryObject(key=Callback(DelPodcast, feedObj=x), title="Remove Podcast", summary="Removes this Podcast from your list", thumb = R(MINUS)))
+				oc.add(DirectoryObject(key=Callback(DelPodcast, feedObj=x), title="Remove Podcast", summary="Click here to remove from My Podcasts", thumb = R(MINUS)))
 		except:
 			pass
 
