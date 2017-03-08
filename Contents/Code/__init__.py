@@ -19,11 +19,19 @@ def Start():
 	TrackObject.thumb = R(ICON)
 
 	# Initialize Dict if it does not exist yet
-	if not Dict['podcastlist']:
-		Dict['podcastlist'] = []
+	if not Dict['feed-v2']:
+		Dict['feed-v2'] = []
 
-#	Dict['podcastlist'] = []
-#	Dict.save()
+		if Dict['feed']:
+			for x in Dict['feed']:
+				ugly = [x[0], x[1], x[2], ""]
+				Dict['feed-v2'].append(ugly)
+
+			Dict['feed-v2'].sort(key=lambda x: x[0])
+			Dict.Save()
+
+			Dict['feed'] = []
+			Dict.save()
 
 ####################################################################################################     
 @handler('/music/plexcasts', 'PlexCasts', thumb=ICON, art=ART)
@@ -50,10 +58,10 @@ def PodcastMenu():
 	oc.title1 = 'My Podcasts'
 
 
-	for x in Dict['podcastlist']:
+	for x in Dict['feed-v2']:
 
 		try:
-			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[0], feedurl=x[1], offset=0, showAdd="False"), title=x[0], summary=x[2], thumb = x[3]))
+			oc.add(DirectoryObject(key=Callback(PodcastEpisodeMenu, title=x[0], feedurl=x[1], offset=0, showAdd="False"), title=x[0], summary=x[3], thumb=x[2]))
 		except:
 			pass
 
@@ -110,7 +118,7 @@ def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 		oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 		pass
 
-	for x in Dict['podcastlist']:
+	for x in Dict['feed-v2']:
 		try:
 			if x[1] == feedurl:
 				oc.add(DirectoryObject(key=Callback(DelPodcast, feedObj=x), title="Remove Podcast", summary="Removes this Podcast from your list", thumb = R(MINUS)))
@@ -128,12 +136,12 @@ def AddPodcast( podcastURL=None, podcastName=None, podcastSummary=None, podcastI
 
 	if (podcastURL != None) and (podcastName != None) and (podcastSummary != None) and (podcastIcon != None):
 
-		ugly = [podcastName, podcastURL, podcastSummary, podcastIcon]
+		ugly = [podcastName, podcastURL, podcastIcon, podcastSummary]
 
-		if ugly not in Dict['podcastlist']:
-			Dict['podcastlist'].append(ugly)
+		if ugly not in Dict['feed-v2']:
+			Dict['feed-v2'].append(ugly)
 
-		Dict['podcastlist'].sort(key=lambda x: x[0])
+		Dict['feed-v2'].sort(key=lambda x: x[0])
 		Dict.Save()
 
 	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
@@ -145,15 +153,15 @@ def DelPodcast(feedObj):
 
 	oc = ObjectContainer(replace_parent=False, no_cache=False)
 
-	Log(Dict['podcastlist'])
+	Log(Dict['feed-v2'])
 	try:	
-		Dict['podcastlist'].remove(feedObj)
+		Dict['feed-v2'].remove(feedObj)
 		Dict.Save()
 	except Exception, e:
 		Log(e)
 		pass
 
-	Log(Dict['podcastlist'])
+	Log(Dict['feed-v2'])
 
 	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 	return oc
