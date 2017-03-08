@@ -69,7 +69,9 @@ def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 
 		if showAdd == "True":
 			oc.title1 = 'Listen or add podcast'
-			oc.add(DirectoryObject(key=Callback(AddPodcast, podcastURL=feedurl, podcastName=feed.channel.title, podcastSummary=feed.channel.description, podcastIcon=feed.channel.image.url), title="Add Podcast", thumb = R(ADD)))
+			oc.replace_parent=False
+			oc.no_cache=False
+			oc.add(DirectoryObject(key=Callback(AddPodcast, podcastURL=feedurl, podcastName=title, podcastSummary=feed.channel.description, podcastIcon=feed.channel.image.url), title="Add Podcast", thumb = R(ADD)))
 		else:
 			oc.title1 = title
 
@@ -121,7 +123,7 @@ def PodcastEpisodeMenu(title, feedurl, offset, showAdd):
 @route('/music/plexcasts/add')
 def AddPodcast( podcastURL=None, podcastName=None, podcastSummary=None, podcastIcon=None):
 
-	oc = ObjectContainer(no_cache=True)
+	oc = ObjectContainer(replace_parent=False, no_cache=False)
 	oc.title1 = 'Podcast added'
 
 	if (podcastURL != None) and (podcastName != None) and (podcastSummary != None) and (podcastIcon != None):
@@ -139,16 +141,19 @@ def AddPodcast( podcastURL=None, podcastName=None, podcastSummary=None, podcastI
 	return oc
 
 ####################################################################################################
-@route('/music/plexcasts/delete')
 def DelPodcast(feedObj):
 
-	oc = ObjectContainer(no_cache=True)
+	oc = ObjectContainer(replace_parent=False, no_cache=False)
 
+	Log(Dict['podcastlist'])
 	try:	
 		Dict['podcastlist'].remove(feedObj)
 		Dict.Save()
-	except:
+	except Exception, e:
+		Log(e)
 		pass
+
+	Log(Dict['podcastlist'])
 
 	oc.add(DirectoryObject(key=Callback(MainMenu), title="Back", thumb = R(BACK)))
 	return oc
@@ -190,8 +195,8 @@ def CreateTrackObject(url, title, thumb, summary, include_container=False):
 @route('/music/plexcasts/find', 'Find Podcast', thumb=ICON, art=ART)
 def Search(query):
 
-	oc = ObjectContainer(no_cache=True)
-	oc.title1 = 'Select podcast to add'
+	oc = ObjectContainer(replace_parent=False, no_cache=False)
+	oc.title1 = 'Found Podcasts'
 	neary = str(query.replace (" ", "+"))
 	pod = JSON.ObjectFromURL("https://itunes.apple.com/search?term=%s&entity=podcast&limit=26" % neary)['results']
 
